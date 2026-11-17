@@ -24,7 +24,7 @@ void inicializarPalabra(char palabra[],char descubiertas[]);
 void descubrirLetra(char palabra[], char descubiertas[], char letra);
 int letraRepetida(char utilizadas[],int cantidad, char letra); //Solo comprueba si la letra existe en el arreglo.
 void mostrarLetrasUtilizadas(char utilizadas[],int cantidad);
-void jugar(Palabra palabras[],int total);
+void jugar(Palabra palabras[],int total,Cola colas[]);
 void mostrarBancoPalabras(Palabra palabras[],int total);
 void agregarPalabra(Palabra palabras[],int *total); /*cuando uso int total, la funcion recibe una copia del numero de palabras, ahora utilizamo un puntero
 que nos permite modificar la variable original*/
@@ -36,12 +36,18 @@ int isEmpty(Cola*cola);
 int isFull(Cola*cola);
 int enqueueCola(Cola*cola,int posicion);
 int dequeue(Cola*cola);
+void llenarCola(Cola*cola,Palabra palabras[], int total, int categoria);
+void dibujarAhorcado(int errores);
 
 int main(int argc, char *argv[]) {
 	Palabra palabras[MAX];
-	int total,opc;
+	Cola colas[3]; //Estamos creando 3 variables de tipo cola dentro de un arreglo.
+	int total,opc,i;
 	srand(time(NULL));
 	total=cargarPalabras(palabras);
+	for(i=0;i<3;i++){
+		inicializarCola(&colas[i]);
+	}	
 	if(total==0){
 		printf("No hay palabras disponibles.\n");
 		return 1;
@@ -59,7 +65,7 @@ int main(int argc, char *argv[]) {
 		printf("\n\nSeleccione una opcion: "); scanf("%i",&opc);
 		switch(opc){
 			case 1:
-				jugar(palabras,total);
+				jugar(palabras,total,colas);
 				break;
 			case 2:
 				administrarPalabras(palabras,&total);
@@ -82,9 +88,11 @@ int main(int argc, char *argv[]) {
 	}while(opc!=6);
 	return 0;
 }
-void jugar(Palabra palabras[],int total){
+void jugar(Palabra palabras[],int total,Cola colas[]){
 	char letra;
 	int posicion, resultado,intentos, categoria;
+	int intentosIniciales,errores; /*Intentos iniciales guarda los intentos que recibe el jugador
+	,errores indica que tan avanzado debe estar el dibujo*/
 	char descubiertas[30]; //este arreglo tendra espacio para representar las letras descubiertas de nuestra palabra
 	char utilizadas[27];//Guardara las letras que el jugador vaya introduciendo
 	int cantidadUtilizadas=0;//Llevara la cuenta de cuantas letras diferentes se han registrado.
@@ -102,7 +110,15 @@ void jugar(Palabra palabras[],int total){
 		printf("\nCategoria no valida.\n");
 		return;
 	}
-	posicion=elegirPalabras(palabras,total,categoria);
+	//Si la cola de esta categoria esta vacia, la llenamos
+	if(isEmpty(&colas[categoria-1])){/*categoria-1 porque las actegorias empiezan en 1, pero los
+		indices de los arreglos empiezan en 0*/
+		llenarCola(&colas[categoria-1],palabras,total,categoria);
+		/*Esta funcion busca las posiciones de las palabras de esa categoria
+	, las mezcla aleatoriamente y las inserta en la cola*/
+	}
+	//Obtener la siguiente palabra de la cola
+	posicion=dequeue(&colas[categoria-1]);
 	if(posicion==-1){
 		printf("\nNo hay palabras disponibles en esta categoria.\n");
 		return;
@@ -122,6 +138,7 @@ void jugar(Palabra palabras[],int total){
 			intentos=6;
 			break;
 	}
+	intentosIniciales=intentos;
 	printf("\nDificultadad de la palabra: ");
 	switch(palabras[posicion].dificultad){
 		case 1:
@@ -137,6 +154,8 @@ void jugar(Palabra palabras[],int total){
 			printf("Sin clasificar\n");
 	}
 	while(strcmp(palabras[posicion].texto,descubiertas)!=0 && intentos>0){
+		errores=((intentosIniciales-intentos)*6)/intentosIniciales;
+		dibujarAhorcado(errores);
 		mostrarPalabra(descubiertas);
 		 mostrarLetrasUtilizadas(utilizadas,cantidadUtilizadas);
 		printf("\nIntentos disponibles: %i",intentos);
@@ -164,6 +183,8 @@ void jugar(Palabra palabras[],int total){
 			printf("\nIncorrecto. La letra no esta en la palabra.\n");
 		}
 	}
+	errores=((intentosIniciales-intentos)*6)/intentosIniciales;
+	dibujarAhorcado(errores);
 	mostrarPalabra(descubiertas);//mostramos la palabra oculta
 	if(strcmp(palabras[posicion].texto,descubiertas)==0){
 			printf("\nFELICIDADES! HAS GANADO!\n");
@@ -472,4 +493,54 @@ int dequeue(Cola*cola){
 		}
 	}
 	return saliente;
+}
+
+void llenarCola(Cola*cola,Palabra palabras[], int total, int categoria){
+	int posiciones[MAX];
+	int cantidad=0;
+	int i,j,aux;
+	//Buscar las palabras de la categoria
+	for(i=0;i<total;i++){/*Digamos que tenemos el banco de palabras con sus categorias, si el jugador seleccion la categoria 1(animales)
+		Este ciclo guardara las posicionesY despues mezclamos esas posiciones. para insertarlas en ka cika ¿*/
+		if(palabras[i].categoria==categoria){
+			posiciones[cantidad]=i;
+			cantidad++;
+		}
+	}
+	//Mezclar las posiciones aleatoriamente
+	for(i=cantidad-1;i>0;i--){
+		j=rand()%(i+1);
+		aux=posiciones[i];
+		posiciones[i]=posiciones[j];
+		posiciones[j]=aux;
+	}
+	//Insertar las posiciones en la cola
+	for(i=0;i<cantidad;i++){
+		enqueueCola(cola,posiciones[i]);
+	}
+}
+
+void dibujarAhorcado(int errores){
+    printf("\n  +----+");
+    printf("\n  |    |");
+    if(errores >= 1) //1 o mas errores, mostramos la cabeza
+        printf("\n  O    |");
+    else
+        printf("\n       |");
+    if(errores >= 4)
+        printf("\n /|\\   |");
+    else if(errores >= 3)
+        printf("\n /|    |");
+    else if(errores >= 2)
+        printf("\n  |    |");
+    else
+        printf("\n       |");
+    if(errores >= 6)
+        printf("\n / \\   |");
+    else if(errores >= 5)
+        printf("\n /     |");
+    else
+        printf("\n       |");
+    printf("\n       |");
+    printf("\n =======\n");
 }
