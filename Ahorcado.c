@@ -8,16 +8,15 @@
 typedef struct{
 	char texto[30];
 	int categoria;
-	int dificultad;
+	int dificultad; //operador "." sirve para acceder a los campos de una variable de tipo estructura
 }Palabra; //Tipo de dato "Palabra", que reune 3 elementos
 
 typedef struct{ 
 	int elementos[MAX];//Guarda las posiciones de las palabras
 	int frente, atras;
-}Cola;
+}Cola; //No almacenamos directamente las palabras, sino sus posiciones dentro del banco de palabras
 
 int cargarPalabras(Palabra palabras[]);
-int elegirPalabras(Palabra palabras[], int total, int categoria);
 void mostrarPalabra(char descubiertas[]);
 int buscarLetra(char palabra[],char letra);
 void inicializarPalabra(char palabra[],char descubiertas[]);
@@ -38,6 +37,8 @@ int enqueueCola(Cola*cola,int posicion);
 int dequeue(Cola*cola);
 void llenarCola(Cola*cola,Palabra palabras[], int total, int categoria);
 void dibujarAhorcado(int errores);
+int calcularPuntos(int dificultad,int intentos,int gano);
+void mostrarEstadisticas(int totalPartidas,int ganadas,int perdidas, int puntosTotales);
 
 int main(int argc, char *argv[]) {
 	Palabra palabras[MAX];
@@ -77,7 +78,9 @@ int main(int argc, char *argv[]) {
 				printf("\nHistorial de partidad.\n"); //Pendiente
 				break;
 			case 5:
-				printf("\nEstadisticas generales"); // Pendiente
+				printf("\n ===== ESTADISTICAS GENERALES =====\n");
+				printf("Las estadisticas estaran disponibles ");
+				printf(" Cuando se integre el historias de partidas.\n");
 				break;
 			case 6:
 				printf("\nGracias por jugar!\n");
@@ -96,11 +99,15 @@ void jugar(Palabra palabras[],int total,Cola colas[]){
 	char descubiertas[30]; //este arreglo tendra espacio para representar las letras descubiertas de nuestra palabra
 	char utilizadas[27];//Guardara las letras que el jugador vaya introduciendo
 	int cantidadUtilizadas=0;//Llevara la cuenta de cuantas letras diferentes se han registrado.
+	char nombreJugador[50];
+	int puntos,gano;//variables para guardar el resultado de la partida y los puntos obtenidos
 	printf("\n====================================\n");
 	printf("\n");
 	printf("           JUEGO DEL AHORCADO\n");
 	printf("\n");
 	printf("=====================================\n");
+	printf("\n===== NUEVA PARTIDA =====\n");
+	printf("Nombre del jugador:"); scanf(" %49[^\n]",nombreJugador); /*[^\n permite leer nombre que contienen espacios]*/
 	printf("\n===== SELECCIONAR CATEGORIA =====\n");
 	printf("1. Animales\n");
 	printf("2. Tecnologia\n");
@@ -192,6 +199,18 @@ void jugar(Palabra palabras[],int total,Cola colas[]){
 			printf("\nHAS PERDIDO!\n");
 			printf("La palabra era : %s\n",palabras[posicion].texto);
 		}
+	gano=(strcmp(palabras[posicion].texto,descubiertas)==0);//Compara la palabra original con la descubierta
+	puntos=calcularPuntos(palabras[posicion].dificultad,intentos,gano);
+	printf("\n===== RESULTADO DE LA PARTIDA =====\n");
+	printf("Jugador: %s\n",nombreJugador);
+	if(gano==1){
+		printf("Resultado: VICTORIA\n");
+	}else{
+		printf("Resultado: DERROTA\n");
+	}
+	printf("Palabra: %s\n",palabras[posicion].texto);
+	printf("Intentos restantes: %i\n",intentos);
+	printf("Puntos obtenidos: %i\n",puntos);
 }
 
 int cargarPalabras(Palabra palabras[]){
@@ -219,25 +238,7 @@ int cargarPalabras(Palabra palabras[]){
     fclose(arch);
     return total;
 }
-int elegirPalabras(Palabra palabras[],int total, int categoria){
-	int i;
-	int cantidad=0;
-	int posiciones[MAX];
-	int seleccion;
-	for(i=0;i<total;i++){
-		if(palabras[i].categoria==categoria){ /*Si el jugadpr selecciona 1, nuestro
-			ciclo solamente guardara las posiciones 0 y 3 en el arreglo posiciones*/
-			posiciones[cantidad]=i;
-			cantidad++;
-		}
-	}
-	if(cantidad==0){
-		return -1; /*Si no encuentro ninguna palabra de la categoria elegida,
-		la funcion devuelve -1*/
-	}
-	seleccion=rand()%cantidad; // Elegira aleatoriamenre una de esas posiciones
-	return posiciones[seleccion];
-}
+
 
 int buscarLetra(char palabra[],char letra){ //para verificar que la letra que ese inserto este dentro de la palabra.
 	int i;
@@ -544,3 +545,41 @@ void dibujarAhorcado(int errores){
     printf("\n       |");
     printf("\n =======\n");
 }
+
+int calcularPuntos(int dificultad,int intentos,int gano){
+	int puntos=0;
+	if(gano==0){
+		return 0;
+	}
+	switch(dificultad){
+		case 1:
+			puntos=50+(intentos*5);
+			break;
+		case 2:
+			puntos=100+(intentos*10);
+			break;
+		case 3:
+			puntos=150+(intentos*15);
+			break;
+	}
+	return puntos;
+}/*intentos indica cuantos intentos le quedan al jugador, 1 si gano,0 si perdio*/
+
+void mostrarEstadisticas(int totalPartidas,int ganadas,int perdidas, int puntosTotales){
+	float porcentaje, promedio;
+	printf("\n ===== ESTADISTICAS GENERALES =====\n");
+	printf("Total de partidas: %i\n",totalPartidas);
+	printf("Partidas ganadas: %i\n",ganadas);
+	printf("Partidas perdidas: %i\n",perdidas);
+	if(totalPartidas>0){//Evita dividir entre 0 cuando todavia no se ha jugado ninguna partida
+		porcentaje=(ganadas*100.0f)/totalPartidas;
+		promedio=(float)puntosTotales/totalPartidas;
+	}else{
+		porcentaje=0;
+		promedio=0;
+	}
+	printf("Porcentaje de victorias: %.2f%%\n",porcentaje);
+	printf("Promedio de puntos: %.2f\n",promedio);
+	printf("=================================");
+}
+
