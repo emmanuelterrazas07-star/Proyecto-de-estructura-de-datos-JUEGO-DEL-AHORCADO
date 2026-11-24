@@ -44,6 +44,7 @@ int main(int argc, char *argv[]) {
 	Palabra palabras[MAX];
 	Cola colas[3]; //Estamos creando 3 variables de tipo cola dentro de un arreglo.
 	int total,opc,i;
+	char entrada[100];
 	srand(time(NULL));
 	total=cargarPalabras(palabras);
 	for(i=0;i<3;i++){
@@ -63,7 +64,41 @@ int main(int argc, char *argv[]) {
 		printf("\n4. Consultar historial de partidas");
 		printf("\n5. Consultar estadisticas generales");
 		printf("\n6. Salir");
-		printf("\n\nSeleccione una opcion: "); scanf("%i",&opc);
+		while(1){
+		printf("\n\nSeleccione una opcion: ");
+
+		if(scanf("%99s",entrada)!=1){
+			return 0;
+		}
+
+		if(strcmp(entrada,"1")==0){
+			opc=1;
+			break;
+		}
+		else if(strcmp(entrada,"2")==0){
+			opc=2;
+			break;
+		}
+		else if(strcmp(entrada,"3")==0){
+			opc=3;
+			break;
+		}
+		else if(strcmp(entrada,"4")==0){
+			opc=4;
+			break;
+		}
+		else if(strcmp(entrada,"5")==0){
+			opc=5;
+			break;
+		}
+		else if(strcmp(entrada,"6")==0){
+			opc=6;
+			break;
+		}
+		else{
+			printf("\nOpcion no valida. Intente nuevamente.\n");
+		}
+}
 		switch(opc){
 			case 1:
 				jugar(palabras,total,colas);
@@ -102,6 +137,7 @@ void jugar(Palabra palabras[],int total,Cola colas[]){
 	int cantidadUtilizadas=0;//Llevara la cuenta de cuantas letras diferentes se han registrado.
 	char nombreJugador[50];
 	int puntos,gano;//variables para guardar el resultado de la partida y los puntos obtenidos
+	char entrada[100];
 	printf("\n====================================\n");
 	printf("\n");
 	printf("           JUEGO DEL AHORCADO\n");
@@ -113,10 +149,26 @@ void jugar(Palabra palabras[],int total,Cola colas[]){
 	printf("1. Animales\n");
 	printf("2. Tecnologia\n");
 	printf("3. Deportes\n");
-	printf("Seleccione una categoria: "); 
-	if(scanf("%i",&categoria)!=1||categoria<1||categoria>3){
-		printf("\nCategoria no valida.\n");
-		return;
+	while(1){
+		printf("Seleeciona una categoria: "); 
+		if(scanf("%99s",entrada)!=1){
+			return;
+		}
+		if(strcmp(entrada,"1")==0){
+			categoria=1;
+			break;
+		}
+		else if(strcmp(entrada,"2")==0){
+			categoria=2;
+			break;
+		}
+		else if(strcmp(entrada,"3")==0){
+			categoria=3;
+			break;
+		}
+		else{
+			printf("\nCategoria no valida. Intente nuevamente.\n");
+		}
 	}
 	//Si la cola de esta categoria esta vacia, la llenamos
 	if(isEmpty(&colas[categoria-1])){/*categoria-1 porque las actegorias empiezan en 1, pero los
@@ -363,7 +415,7 @@ void agregarPalabra(Palabra palabras[], int *total){
         nueva[i] = toupper((unsigned char)nueva[i]);
     }
     if(validarPalabra(nueva) == 0){
-        printf("\nLa palabra contiene caracteres invalidos.\n");
+        printf("\nLa palabra debe tener al menos 3 letras y solo contener caracteres de la A a la Z\n");
         return;
     }
     if(palabraRepetida(palabras, *total, nueva) == 1){
@@ -374,20 +426,56 @@ void agregarPalabra(Palabra palabras[], int *total){
     printf("1. Animales\n");
     printf("2. Tecnologia\n");
     printf("3. Deportes\n");
+	while(1){
     printf("Opcion: ");
-    if(scanf("%d", &categoria) != 1 ||categoria < 1 || categoria > 3){
-        printf("\nCategoria no valida.\n");
+
+    if(scanf("%99s",entrada)!=1){
         return;
     }
+
+    if(strcmp(entrada,"1")==0){
+        categoria=1;
+        break;
+    }
+    else if(strcmp(entrada,"2")==0){
+        categoria=2;
+        break;
+    }
+    else if(strcmp(entrada,"3")==0){
+        categoria=3;
+        break;
+    }
+    else{
+        printf("\nCategoria no valida. Intente nuevamente.\n");
+    }
+}
     printf("\nSeleccione la dificultad:\n");
     printf("1. Facil\n");
     printf("2. Medio\n");
     printf("3. Dificil\n");
+    while(1){
     printf("Opcion: ");
-    if(scanf("%d", &dificultad) != 1 ||dificultad < 1 || dificultad > 3){
-        printf("\nDificultad no valida.\n");
+
+    if(scanf("%99s",entrada)!=1){
         return;
     }
+
+    if(strcmp(entrada,"1")==0){
+        dificultad=1;
+        break;
+    }
+    else if(strcmp(entrada,"2")==0){
+        dificultad=2;
+        break;
+    }
+    else if(strcmp(entrada,"3")==0){
+        dificultad=3;
+        break;
+    }
+    else{
+        printf("\nDificultad no valida. Intente nuevamente.\n");
+    }
+}
     arch = fopen("palabras.txt", "at");
 
     if(arch == NULL){
@@ -405,12 +493,35 @@ void agregarPalabra(Palabra palabras[], int *total){
 
 void administrarPalabras(Palabra palabras[],int *total){
 	int opc;
+	char entrada[100];
 	do{
 		printf("\n===== ADMINISTRACION DE PALABRAS =====");
 		printf("\n1.Mostrar banco de palabras"); 
 		printf("\n2.Agregar nueva palabra");
 		printf("\n3.Regresar al menu principal");
-		printf("\n\nSeleccione una opcion: "); scanf("%i",&opc);
+		while(1){
+		printf("\n\nSeleccione una opcion: ");
+
+		if(scanf("%99s",entrada)!=1){
+			return;
+		}
+
+		if(strcmp(entrada,"1")==0){
+			opc=1;
+			break;
+		}
+		else if(strcmp(entrada,"2")==0){
+			opc=2;
+			break;
+		}
+		else if(strcmp(entrada,"3")==0){
+			opc=3;
+			break;
+		}
+		else{
+			printf("\nOpcion no valida. Intente nuevamente.\n");
+		}
+}
 		switch(opc){
 			case 1:
 				mostrarBancoPalabras(palabras,*total);
@@ -439,7 +550,7 @@ int palabraRepetida(Palabra palabras[], int total, char nueva[]){
 
 int validarPalabra(char palabra[]){
 	int i;
-	if(palabra[0]=='\0'){ //1 si la palabra es valida
+	if(strlen(palabra)<3){
 		return 0;
 	}
 	for(i=0;palabra[i]!='\0';i++){
@@ -583,4 +694,3 @@ void mostrarEstadisticas(int totalPartidas,int ganadas,int perdidas, int puntosT
 	printf("Promedio de puntos: %.2f\n",promedio);
 	printf("=================================");
 }
-
