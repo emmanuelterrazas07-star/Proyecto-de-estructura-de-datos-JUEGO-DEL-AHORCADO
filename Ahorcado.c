@@ -87,6 +87,7 @@ int main(int argc, char *argv[]) {
 				break;
 			default:
 				printf("\nOpcion no valida.\n");
+				break;
 		}
 	}while(opc!=6);
 	return 0;
