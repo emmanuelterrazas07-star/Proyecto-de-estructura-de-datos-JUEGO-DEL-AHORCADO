@@ -16,6 +16,52 @@ typedef struct{
 	int frente, atras;
 }Cola; //No almacenamos directamente las palabras, sino sus posiciones dentro del banco de palabras
 
+typedef struct sPlayer {
+    char name[50];
+    int jugadas, ganadas, perdidas;
+    int totalScore, bestScore;
+} tPlayer;
+
+typedef struct sNodoLista { //mantiene jugadores en memoria para buscarlos por nombre y actualizar datos
+    tPlayer datos;
+    struct sNodoLista *sig;    
+} tNodoLista;
+
+tNodoLista *inicio=NULL;
+
+typedef struct sNodoArbol { //Para ordenar por puntaje solo cuando se solicite
+    tPlayer datos;
+    struct sNodoArbol *izq,*der;
+} tNodoArbol;
+
+tNodoArbol *raiz=NULL;
+
+typedef struct sPartida {
+    char nombre[50];
+    char palabra[30];
+    int gano;
+    int intentos;
+    int puntos;
+    struct sPartida *sig;
+} tPartida;
+
+tPartida *topHistorial = NULL;
+
+int apilarPartida(const char *nombre, const char *palabra, int gano, int intentos, int puntos);
+void mostrarHistorial(void);
+void liberarHistorial(void);
+void cargarHistorial(void);
+
+tNodoArbol *insertarArbol(tPlayer p);
+void printRanking(tNodoArbol *actual, int *posicion);
+void liberarArbol(tNodoArbol *raiz);
+void mostrarClasif(tNodoLista *listaPlayers);
+void liberarLista(void);
+void guardarJugadores(void);
+tNodoLista *buscarJugador(const char *nombre);
+void registrarRes(const char *nombre, int gano, int puntos);
+tNodoLista *cargarJugadores(void);
+
 int cargarPalabras(Palabra palabras[]);
 void mostrarPalabra(char descubiertas[]);
 int buscarLetra(char palabra[],char letra);
@@ -43,88 +89,73 @@ void mostrarEstadisticas(int totalPartidas,int ganadas,int perdidas, int puntosT
 int main(int argc, char *argv[]) {
 	Palabra palabras[MAX];
 	Cola colas[3]; //Estamos creando 3 variables de tipo cola dentro de un arreglo.
-	int total,opc,i;
-	char entrada[100];
+	int total,opc=0,i;
 	srand(time(NULL));
+	cargarJugadores();
+	cargarHistorial();
 	total=cargarPalabras(palabras);
 	for(i=0;i<3;i++){
 		inicializarCola(&colas[i]);
 	}	
-	if(total==0){
+	if(total!=0){
+		do{
+			printf("\n=================================\n");
+			printf("         JUEGO DEL AHORCADO\n");
+			printf("===================================\n");
+			printf("\n1. Iniciar nueva partida");
+			printf("\n2. Administrar banco de palabras");
+			printf("\n3. Consultar clasificacion de jugadores");
+			printf("\n4. Consultar historial de partidas");
+			printf("\n5. Consultar estadisticas generales");
+			printf("\n6. Salir");
+			printf("\n\nSeleccione una opcion: "); scanf("%i",&opc);
+			switch(opc){
+				case 1:
+					jugar(palabras,total,colas);
+					break;
+				case 2:
+					administrarPalabras(palabras,&total);
+					break;
+				case 3:
+					mostrarClasif(inicio);
+					break;
+				case 4:
+					printf("\n===== HISTORIAL DE PARTIDAS =====\n");
+                    mostrarHistorial();
+                    printf("=================================\n");
+                    break;
+				case 5:{
+						tNodoLista *actual = inicio;
+						int totalPartidas = 0;
+						int ganadas = 0;
+						int perdidas = 0;
+						int puntosTotales = 0;
+
+						while (actual != NULL) {
+							totalPartidas += actual->datos.jugadas;
+							ganadas += actual->datos.ganadas;
+							perdidas += actual->datos.perdidas;
+							puntosTotales += actual->datos.totalScore;
+							actual = actual->sig;
+						}
+						printf("\n ======= ESTADISTICAS GENERALES =======\n");
+						mostrarEstadisticas(totalPartidas, ganadas, perdidas,puntosTotales);
+						printf(" ======================================\n");
+						break;
+					}
+				case 6:
+					printf("\nGracias por jugar!\n");
+					break;
+				default:
+					printf("\nOpcion no valida.\n");
+					break;
+			}
+		}while(opc!=6);
+	} else {
 		printf("No hay palabras disponibles.\n");
-		return 1;
 	}
-	do{
-		printf("\n=================================\n");
-		printf("         JUEGO DEL AHORCADO\n");
-		printf("===================================\n");
-		printf("\n1. Iniciar nueva partida");
-		printf("\n2. Administrar banco de palabras");
-		printf("\n3. Consultar clasificacion de jugadores");
-		printf("\n4. Consultar historial de partidas");
-		printf("\n5. Consultar estadisticas generales");
-		printf("\n6. Salir");
-		while(1){
-		printf("\n\nSeleccione una opcion: ");
-
-		if(scanf("%99s",entrada)!=1){
-			return 0;
-		}
-
-		if(strcmp(entrada,"1")==0){
-			opc=1;
-			break;
-		}
-		else if(strcmp(entrada,"2")==0){
-			opc=2;
-			break;
-		}
-		else if(strcmp(entrada,"3")==0){
-			opc=3;
-			break;
-		}
-		else if(strcmp(entrada,"4")==0){
-			opc=4;
-			break;
-		}
-		else if(strcmp(entrada,"5")==0){
-			opc=5;
-			break;
-		}
-		else if(strcmp(entrada,"6")==0){
-			opc=6;
-			break;
-		}
-		else{
-			printf("\nOpcion no valida. Intente nuevamente.\n");
-		}
-}
-		switch(opc){
-			case 1:
-				jugar(palabras,total,colas);
-				break;
-			case 2:
-				administrarPalabras(palabras,&total);
-				break;
-			case 3:
-				printf("\nClasificacion de jugadores.\n"); //Pendiente
-				break;
-			case 4:
-				printf("\nHistorial de partidad.\n"); //Pendiente
-				break;
-			case 5:
-				printf("\n ===== ESTADISTICAS GENERALES =====\n");
-				printf("Las estadisticas estaran disponibles ");
-				printf(" Cuando se integre el historias de partidas.\n");
-				break;
-			case 6:
-				printf("\nGracias por jugar!\n");
-				break;
-			default:
-				printf("\nOpcion no valida.\n");
-				break;
-		}
-	}while(opc!=6);
+	liberarLista();
+	liberarHistorial();
 	return 0;
 }
 void jugar(Palabra palabras[],int total,Cola colas[]){
@@ -137,38 +168,21 @@ void jugar(Palabra palabras[],int total,Cola colas[]){
 	int cantidadUtilizadas=0;//Llevara la cuenta de cuantas letras diferentes se han registrado.
 	char nombreJugador[50];
 	int puntos,gano;//variables para guardar el resultado de la partida y los puntos obtenidos
-	char entrada[100];
-	printf("\n====================================\n");
-	printf("\n");
-	printf("           JUEGO DEL AHORCADO\n");
-	printf("\n");
-	printf("=====================================\n");
+	printf("\n=====================================\n");
+    printf("           JUEGO DEL AHORCADO\n");
+    printf("=====================================\n");
+    
 	printf("\n===== NUEVA PARTIDA =====\n");
-	printf("Nombre del jugador:"); scanf(" %49[^\n]",nombreJugador); /*[^\n permite leer nombre que contienen espacios]*/
+    printf("Nombre del jugador: "); scanf(" %49[^\n]",nombreJugador); /*[^\n permite leer nombre que contienen espacios]*/
+	
 	printf("\n===== SELECCIONAR CATEGORIA =====\n");
 	printf("1. Animales\n");
 	printf("2. Tecnologia\n");
 	printf("3. Deportes\n");
-	while(1){
-		printf("Seleeciona una categoria: "); 
-		if(scanf("%99s",entrada)!=1){
-			return;
-		}
-		if(strcmp(entrada,"1")==0){
-			categoria=1;
-			break;
-		}
-		else if(strcmp(entrada,"2")==0){
-			categoria=2;
-			break;
-		}
-		else if(strcmp(entrada,"3")==0){
-			categoria=3;
-			break;
-		}
-		else{
-			printf("\nCategoria no valida. Intente nuevamente.\n");
-		}
+	printf("Seleccione una categoria: "); 
+	if(scanf("%i",&categoria)!=1||categoria<1||categoria>3){
+		printf("\nCategoria no valida.\n");
+		return;
 	}
 	//Si la cola de esta categoria esta vacia, la llenamos
 	if(isEmpty(&colas[categoria-1])){/*categoria-1 porque las actegorias empiezan en 1, pero los
@@ -199,7 +213,7 @@ void jugar(Palabra palabras[],int total,Cola colas[]){
 			break;
 	}
 	intentosIniciales=intentos;
-	printf("\nDificultadad de la palabra: ");
+	printf("\nDificultad de la palabra: ");
 	switch(palabras[posicion].dificultad){
 		case 1:
 			printf("Facil\n");
@@ -264,6 +278,9 @@ void jugar(Palabra palabras[],int total,Cola colas[]){
 	printf("Palabra: %s\n",palabras[posicion].texto);
 	printf("Intentos restantes: %i\n",intentos);
 	printf("Puntos obtenidos: %i\n",puntos);
+	registrarRes(nombreJugador, gano, puntos);
+	apilarPartida(nombreJugador, palabras[posicion].texto, gano, intentos, puntos);
+
 }
 
 int cargarPalabras(Palabra palabras[]){
@@ -390,7 +407,7 @@ void mostrarBancoPalabras(Palabra palabras[],int total){ //No estamos leyendo nu
 		}
 
 	}
-	printf("\nTotal de palabraa: %i\n",total);
+	printf("\nTotal de palabras: %i\n",total);
 }
 
 void agregarPalabra(Palabra palabras[], int *total){
@@ -415,7 +432,7 @@ void agregarPalabra(Palabra palabras[], int *total){
         nueva[i] = toupper((unsigned char)nueva[i]);
     }
     if(validarPalabra(nueva) == 0){
-        printf("\nLa palabra debe tener al menos 3 letras y solo contener caracteres de la A a la Z\n");
+        printf("\nLa palabra contiene caracteres invalidos.\n");
         return;
     }
     if(palabraRepetida(palabras, *total, nueva) == 1){
@@ -426,56 +443,20 @@ void agregarPalabra(Palabra palabras[], int *total){
     printf("1. Animales\n");
     printf("2. Tecnologia\n");
     printf("3. Deportes\n");
-	while(1){
     printf("Opcion: ");
-
-    if(scanf("%99s",entrada)!=1){
+    if(scanf("%d", &categoria) != 1 ||categoria < 1 || categoria > 3){
+        printf("\nCategoria no valida.\n");
         return;
     }
-
-    if(strcmp(entrada,"1")==0){
-        categoria=1;
-        break;
-    }
-    else if(strcmp(entrada,"2")==0){
-        categoria=2;
-        break;
-    }
-    else if(strcmp(entrada,"3")==0){
-        categoria=3;
-        break;
-    }
-    else{
-        printf("\nCategoria no valida. Intente nuevamente.\n");
-    }
-}
     printf("\nSeleccione la dificultad:\n");
     printf("1. Facil\n");
     printf("2. Medio\n");
     printf("3. Dificil\n");
-    while(1){
     printf("Opcion: ");
-
-    if(scanf("%99s",entrada)!=1){
+    if(scanf("%d", &dificultad) != 1 ||dificultad < 1 || dificultad > 3){
+        printf("\nDificultad no valida.\n");
         return;
     }
-
-    if(strcmp(entrada,"1")==0){
-        dificultad=1;
-        break;
-    }
-    else if(strcmp(entrada,"2")==0){
-        dificultad=2;
-        break;
-    }
-    else if(strcmp(entrada,"3")==0){
-        dificultad=3;
-        break;
-    }
-    else{
-        printf("\nDificultad no valida. Intente nuevamente.\n");
-    }
-}
     arch = fopen("palabras.txt", "at");
 
     if(arch == NULL){
@@ -493,35 +474,12 @@ void agregarPalabra(Palabra palabras[], int *total){
 
 void administrarPalabras(Palabra palabras[],int *total){
 	int opc;
-	char entrada[100];
 	do{
 		printf("\n===== ADMINISTRACION DE PALABRAS =====");
 		printf("\n1.Mostrar banco de palabras"); 
 		printf("\n2.Agregar nueva palabra");
 		printf("\n3.Regresar al menu principal");
-		while(1){
-		printf("\n\nSeleccione una opcion: ");
-
-		if(scanf("%99s",entrada)!=1){
-			return;
-		}
-
-		if(strcmp(entrada,"1")==0){
-			opc=1;
-			break;
-		}
-		else if(strcmp(entrada,"2")==0){
-			opc=2;
-			break;
-		}
-		else if(strcmp(entrada,"3")==0){
-			opc=3;
-			break;
-		}
-		else{
-			printf("\nOpcion no valida. Intente nuevamente.\n");
-		}
-}
+		printf("\n\nSeleccione una opcion: "); scanf("%i",&opc);
 		switch(opc){
 			case 1:
 				mostrarBancoPalabras(palabras,*total);
@@ -550,7 +508,7 @@ int palabraRepetida(Palabra palabras[], int total, char nueva[]){
 
 int validarPalabra(char palabra[]){
 	int i;
-	if(strlen(palabra)<3){
+	if(palabra[0]=='\0'){ //1 si la palabra es valida
 		return 0;
 	}
 	for(i=0;palabra[i]!='\0';i++){
@@ -679,7 +637,6 @@ int calcularPuntos(int dificultad,int intentos,int gano){
 
 void mostrarEstadisticas(int totalPartidas,int ganadas,int perdidas, int puntosTotales){
 	float porcentaje, promedio;
-	printf("\n ===== ESTADISTICAS GENERALES =====\n");
 	printf("Total de partidas: %i\n",totalPartidas);
 	printf("Partidas ganadas: %i\n",ganadas);
 	printf("Partidas perdidas: %i\n",perdidas);
@@ -692,5 +649,267 @@ void mostrarEstadisticas(int totalPartidas,int ganadas,int perdidas, int puntosT
 	}
 	printf("Porcentaje de victorias: %.2f%%\n",porcentaje);
 	printf("Promedio de puntos: %.2f\n",promedio);
-	printf("=================================");
+}
+
+tNodoLista *cargarJugadores(void){
+    FILE *arch;
+	//ya esta el inicio = NULL arriba.
+	char linea[200];
+	tPlayer player;
+
+    arch = fopen("jugadores.txt", "rt");
+
+    if(arch != NULL){
+        while(fgets(linea, sizeof(linea), arch)!= NULL){
+
+			//sscanf -> string scanf, devuelve cantidad de variables que logró llenar
+			if (sscanf(linea, "%49[^|]|%d|%d|%d|%d|%d", 
+								player.name, &player.jugadas, &player.ganadas, 
+								&player.perdidas, &player.totalScore, 
+								&player.bestScore)==6)
+			{
+				tNodoLista *nuevo = (tNodoLista *)malloc(sizeof(tNodoLista));
+				if(nuevo!=NULL){
+					nuevo->datos = player;
+					nuevo->sig = inicio; //insertar al inicio de la lista
+					inicio = nuevo;
+				}
+			} 
+		}
+    } else {
+        arch = fopen("jugadores.txt", "wt");
+	}
+	if (arch!=NULL)
+		fclose(arch);
+	return inicio;
+}
+
+tNodoLista *buscarJugador(const char *nombre){
+	tNodoLista *aux = inicio;
+	while(aux!=NULL && strcmp(aux->datos.name, nombre)!=0)
+		aux=aux->sig;
+	return aux; //NULL si no lo encontró
+}
+
+void guardarJugadores(void){
+	FILE *arch = fopen("jugadores.txt", "wt");
+	tNodoLista *aux=inicio;
+	if(arch!=NULL){
+		while(aux!=NULL){
+			fprintf(arch, "%s|%d|%d|%d|%d|%d\n", 
+				aux->datos.name, aux->datos.jugadas,
+				aux->datos.ganadas, aux->datos.perdidas,
+				aux->datos.totalScore, aux->datos.bestScore);
+			aux=aux->sig;
+		}
+		fclose(arch);
+	} else{
+		printf("No se pudieron guardar los jugadores.\n");
+	}
+}
+
+void registrarRes(const char *nombre, int gano, int puntos){
+	tNodoLista *encontrado = buscarJugador(nombre);
+
+	if(encontrado!=NULL){
+		encontrado->datos.jugadas++;
+		if (gano==1) 
+			encontrado->datos.ganadas++;
+		else 
+			encontrado->datos.perdidas++;
+
+		encontrado->datos.totalScore += puntos;
+		if(puntos > encontrado->datos.bestScore)
+			encontrado->datos.bestScore = puntos;
+	} else {
+		tNodoLista *nuevo = (tNodoLista *)malloc(sizeof(tNodoLista));
+		if (nuevo!=NULL){
+
+			snprintf(nuevo->datos.name, sizeof nuevo->datos.name, "%s", nombre);
+			//snprintf escribe en el arreglo destino
+			//snprintf(arregloDestino, sizeof destino, formato, valor a insertar)
+
+			nuevo->datos.jugadas=1;
+			nuevo->datos.ganadas = (gano==1)? 1 : 0;
+			nuevo->datos.perdidas = (gano==1) ? 0 : 1;
+			nuevo->datos.totalScore = puntos;
+			nuevo->datos.bestScore = puntos;
+			nuevo->sig = inicio;
+			inicio = nuevo;
+		} else 
+			printf("No hay memoria para registrar al jugador.\n");
+	}
+	guardarJugadores();
+}
+
+tNodoArbol *insertarArbol(tPlayer p){
+	tNodoArbol *aux=raiz, *futuroPapa=NULL;
+	tNodoArbol *nuevo = (tNodoArbol *)malloc(sizeof(tNodoArbol));
+	if(nuevo!=NULL){
+		nuevo->datos=p;
+		nuevo->der = nuevo->izq = NULL;
+		if(raiz == NULL){
+			raiz = nuevo;
+		}else{
+			while(aux!=NULL){
+				futuroPapa=aux;
+				if(p.totalScore <= aux->datos.totalScore)
+					aux = aux->izq;
+				else
+					aux = aux->der;
+			}
+			if(p.totalScore <= futuroPapa->datos.totalScore)
+				futuroPapa->izq=nuevo;
+			else 
+				futuroPapa->der=nuevo;
+		}
+	} else
+		printf("No se pudo reservar memoria.\n");
+	return nuevo;
+}
+
+void printRanking(tNodoArbol *actual, int *posicion){
+	if(actual!=NULL){
+		printRanking(actual->der, posicion);
+		printf("#%i. %s | Jugadas: %i | Ganadas: %i | Perdidas: %i | Puntaje total: %d | Mejor puntaje: %d\n",
+			(*posicion)++, actual->datos.name, actual->datos.jugadas, actual->datos.ganadas, actual->datos.perdidas,
+		actual->datos.totalScore, actual->datos.bestScore);
+		printRanking(actual->izq, posicion);
+	}
+}
+
+void liberarArbol(tNodoArbol *raiz){
+	if(raiz!=NULL){
+		liberarArbol(raiz->izq);
+		liberarArbol(raiz->der);
+		free(raiz);
+	}
+}
+
+void mostrarClasif(tNodoLista *listaPlayers){
+	tNodoLista *actual = listaPlayers;
+	int posicion = 1;
+	if(listaPlayers!=NULL){
+
+		while(actual!=NULL){
+			insertarArbol(actual->datos);
+			actual=actual->sig;
+		}
+
+		printf("\n===== CLASIFICACION DE JUGADORES =====\n");
+		printRanking(raiz, &posicion);
+		printf("======================================\n");
+		liberarArbol(raiz);
+		raiz=NULL;
+	}else
+		printf("\nAun no existen registros de jugadores.\n");
+}
+
+void liberarLista(void) {
+    tNodoLista *actual = inicio;
+
+    while (actual != NULL) {
+        tNodoLista *siguiente = actual->sig;
+        free(actual);
+        actual = siguiente;
+    }
+
+    inicio = NULL;
+}
+void cargarHistorial(void){
+	FILE *arch = fopen("historial.txt", "rt");
+	char linea[150];
+
+	if(arch!=NULL){
+		while (fgets(linea, sizeof linea, arch) != NULL){
+			tPartida registro;
+			tPartida *nuevo;
+
+			if(sscanf(linea, "%49[^|]|%29[^|]|%d|%d|%d", 
+				registro.nombre, registro.palabra, &registro.gano, 
+				&registro.intentos, &registro.puntos)==5){
+				nuevo=(tPartida *)malloc(sizeof(tPartida));
+				if(nuevo!=NULL){
+					snprintf(nuevo->nombre, sizeof nuevo->nombre, "%s", registro.nombre);
+					snprintf(nuevo->palabra, sizeof nuevo->palabra, "%s", registro.palabra);
+					nuevo->gano = registro.gano;
+					nuevo->intentos = registro.intentos;
+					nuevo->puntos = registro.puntos;
+
+					nuevo->sig = topHistorial;
+					topHistorial = nuevo;
+				} else
+					printf("No hay memoria para cargar todo el historial.\n");
+			}
+		}
+		fclose(arch);
+	}else 
+		printf("Aun no se tienen registros de partidas.\n");
+}
+
+int apilarPartida(const char *nombre, const char *palabra, int gano, int intentos, int puntos){
+	tPartida *nuevo = (tPartida *)malloc(sizeof(tPartida));
+	FILE *arch;
+	int seGuardo=0;
+
+	if(nuevo!=NULL){
+		snprintf(nuevo->nombre, sizeof nuevo->nombre, "%s", nombre);
+		snprintf(nuevo->palabra, sizeof nuevo->palabra, "%s", palabra);
+		nuevo->gano = gano;
+		nuevo->intentos = intentos;
+		nuevo->puntos = puntos;
+
+		arch = fopen("historial.txt", "at");
+		if(arch!=NULL){
+			seGuardo = fprintf(arch, "%s|%s|%d|%d|%d\n",
+                nuevo->nombre, nuevo->palabra, nuevo->gano,
+                nuevo->intentos, nuevo->puntos) >= 0;
+			//fprintf devuelve un numero negativo si hubo error
+
+			if(fclose(arch)!=0) //fclose devuelve 0 si el cierre salio bien, !=0 significa error
+				seGuardo=0;
+
+			if(seGuardo){
+				nuevo->sig = topHistorial;
+				topHistorial = nuevo;
+			}else{
+				printf("No se pudo guardar la partida en el archivo.\n");
+				free(nuevo);
+			}
+		} else {
+			printf("No se pudo abrir el archivo para guardar el historial.\n");
+			free(nuevo);
+		}
+	} else 
+		printf("No hay memoria para guardar la partida.\n");
+	return seGuardo;
+}
+void mostrarHistorial(void){
+	tPartida *actual = topHistorial;
+	int numero = 1;
+
+	if(actual!=NULL){
+		while(actual!=NULL){
+			printf("#%d | Jugador: %s | Palabra: %s | Resultado: %s"
+               " | Intentos restantes: %d | Puntos: %d\n",
+			   numero++,
+			   actual->nombre,
+			   actual->palabra,
+			   actual->gano ? "Victoria" : "Derrota",
+			   actual->intentos,
+			   actual->puntos);
+			actual=actual->sig;
+		}
+	} else {
+		printf("Aun no hay partidas en el historial.\n");
+	}
+}
+void liberarHistorial(void){
+	tPartida *actual = topHistorial;
+	while(actual!=NULL){
+		tPartida *sig = actual->sig;
+		free(actual);
+		actual=sig;
+	}
+	topHistorial=NULL;
 }
