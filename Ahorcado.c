@@ -101,7 +101,7 @@ int main(int argc, char *argv[]) {
 		do{
 			printf("\n=================================\n");
 			printf("         JUEGO DEL AHORCADO\n");
-			printf("===================================\n");
+			printf("=================================\n");
 			printf("\n1. Iniciar nueva partida");
 			printf("\n2. Administrar banco de palabras");
 			printf("\n3. Consultar clasificacion de jugadores");
@@ -140,7 +140,6 @@ int main(int argc, char *argv[]) {
 						}
 						printf("\n ======= ESTADISTICAS GENERALES =======\n");
 						mostrarEstadisticas(totalPartidas, ganadas, perdidas,puntosTotales);
-						printf(" ======================================\n");
 						break;
 					}
 				case 6:
